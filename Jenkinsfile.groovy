@@ -1,9 +1,5 @@
 pipeline {
-    agent any
-    environment {
-        DB_URL = 'mysql+pymysql://usr:pwd@host:/db'
-        DISABLE_AUTH = true
-    }
+    agent label 'docker-agent'
     stages {
         stage("Build") {
             steps {
@@ -17,7 +13,6 @@ pipeline {
                     echo "DISABLE_AUTH is ${DISABLE_AUTH}"
                     env
                 '''
-                echo "Running a job with build #: ${env.BUILD_NUMBER} on ${env.JENKINS_URL}"
             }
         }
         stage("Test") {
