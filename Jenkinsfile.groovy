@@ -1,30 +1,65 @@
 pipeline {
     agent any
-    
+    environment {
+        DB_URL = 'mysql+pymysql://usr:pwd@host:/db'
+        DISABLE_AUTH = true
+    }
     stages {
-        stage('Build') {
+        stage("Build") {
             steps {
-                // Cloner le code source depuis votre dépôt GitHub
-                git 'https://github.com/MerkeyDiav/react-bucket-serverless.git'
-                
-                // Exécuter d'autres commandes ou scripts selon vos besoins
-                sh 'echo "Build step: Insérer vos commandes de construction ici"'
+                echo "Building the app..."
+                sh '''
+                    echo "This block contains multi-line steps"
+                    ls -lh
+                '''
+                sh '''
+                    echo "Database url is: ${DB_URL}"
+                    echo "DISABLE_AUTH is ${DISABLE_AUTH}"
+                    env
+                '''
+                echo "Running a job with build #: ${env.BUILD_NUMBER} on ${env.JENKINS_URL}"
             }
         }
-        stage('Test') {
+        stage("Test") {
             steps {
-                // Exécuter des tests, par exemple des tests unitaires
-                sh 'echo "Test step: Insérer vos commandes de test ici"'
+                echo "Testing the app..."
             }
         }
-        stage('Deploy') {
-            steps {
-                // Déployer votre application, par exemple sur un serveur
-                sh 'echo "Deploy step: Insérer vos commandes de déploiement ici"'
-            }
+       stages {
+    // ..
+    stage("Deploy to Staging") {
+        steps {
+            sh 'chmod u+x deploy smoke-tests'
+            sh './deploy staging'
+            sh './smoke-tests'
         }
-    },
-    node('node'){
-    ...
+    }
+    stage("Deploy to Production") {
+        steps {
+            sh './deploy prod'
+        }
+    }
 }
+    }
+    post {
+        always {
+            echo "This will always run regardless of the completion status"
+        }
+        success {
+            echo "This will run if the build succeeded"
+        }
+        failure {
+            echo "This will run if the job failed"
+        }
+        unstable {
+            echo "This will run if the completion status was 'unstable', usually by test failures"
+        }
+        changed {
+            echo "This will run if the state of the pipeline has changed"
+            echo "For example, if the previous run failed but is now successful"
+        }
+        fixed {
+            echo "This will run if the previous run failed or unstable and now is successful"
+        }
+    }
 }
